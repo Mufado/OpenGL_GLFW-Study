@@ -8,7 +8,7 @@ void processInput(GLFWwindow *window);
 
 void createVertexObjects(unsigned int *VAO, unsigned int *VBO);
 
-unsigned int createShaderProgram();
+unsigned int createShaderProgram(const char* fragmentShaderSource);
 
 void testShader(GLuint vertexShader);
 
@@ -29,7 +29,7 @@ const char *vertexShaderSource =
 	"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
 	"}\0";
 
-const char* fragmentShaderSource = 
+const char* defaultFragShaderSource = 
 	"#version 330 core\n"
 	"out vec4 FragColor;\n"
 	"void main()\n"
@@ -37,11 +37,19 @@ const char* fragmentShaderSource =
 	"   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
 	"}\n\0";
 
+const char* yellowFragShaderSource =
+	"#version 330 core\n"
+	"out vec4 FragColor;\n"
+	"void main()\n"
+	"{\n"
+	"   FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n"
+	"}\n\0";
+
 // Vertices positions of the triangles
 const float firstTriangle[] = {
-		-1.0f, -0.5f, 0.0f,
-		0.0f, -0.5f, 0.0f,
-		-0.5f,  0.5f, 0.0f
+	-1.0f, -0.5f, 0.0f,
+	0.0f, -0.5f, 0.0f,
+	-0.5f,  0.5f, 0.0f
 };
 
 const float secondTriangle[] = {
@@ -82,8 +90,9 @@ int main()
 	}
 
 	// Configure shaders and buffers
-	unsigned int VAO[2], VBO[2], shaderProgram;
-	shaderProgram = createShaderProgram();
+	unsigned int VAO[2], VBO[2], defaultShaderProgram, yellowShaderProgram;
+	defaultShaderProgram = createShaderProgram(defaultFragShaderSource);
+	yellowShaderProgram = createShaderProgram(yellowFragShaderSource);
 	
 	glGenBuffers(2, VBO);
 	glGenVertexArrays(2, VAO);
@@ -111,13 +120,13 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glUseProgram(shaderProgram);
-
-		// Draw the content specified in VAO
+		// Draw the content specified in VAO with default color
+		glUseProgram(defaultShaderProgram);
 		glBindVertexArray(VAO[0]);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
-		// Draw the content specified in the second VAO
+		// Draw the content specified in the second VAO with yellow color
+		glUseProgram(yellowShaderProgram);
 		glBindVertexArray(VAO[1]);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -127,7 +136,8 @@ int main()
 	}
 
 	// Deleting resources
-	glDeleteProgram(shaderProgram);
+	glDeleteProgram(defaultShaderProgram);
+	glDeleteProgram(yellowShaderProgram);
 	glDeleteVertexArrays(2, VAO);
 	glDeleteBuffers(2, VBO);
 
@@ -186,7 +196,7 @@ void createVertexObjects(unsigned int *VAO, unsigned int *VBO)
 }
 
 // Create and link a Shader Program
-unsigned int createShaderProgram()
+unsigned int createShaderProgram(const char* fragmentShaderSource)
 {
 	// Create a vertex shader and compiles using the vertex shader source
 	unsigned int vertexShader;
