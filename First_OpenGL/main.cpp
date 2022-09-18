@@ -37,6 +37,19 @@ const char* fragmentShaderSource =
 	"   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
 	"}\n\0";
 
+// Vertices positions of the triangles
+const float firstTriangle[] = {
+		-1.0f, -0.5f, 0.0f,
+		0.0f, -0.5f, 0.0f,
+		-0.5f,  0.5f, 0.0f
+};
+
+const float secondTriangle[] = {
+	0.0f, -0.5f, 0.0f,
+	1.0f, -0.5f, 0.0f,
+	0.5f,  0.5f, 0.0f
+};
+
 int main()
 {
 	glfwInit();
@@ -69,9 +82,24 @@ int main()
 	}
 
 	// Configure shaders and buffers
-	unsigned int VAO, VBO, shaderProgram;
+	unsigned int VAO[2], VBO[2], shaderProgram;
 	shaderProgram = createShaderProgram();
-	createVertexObjects(&VAO, &VBO);
+	
+	glGenBuffers(2, VBO);
+	glGenVertexArrays(2, VAO);
+	glBindVertexArray(VAO[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(firstTriangle), firstTriangle, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glBindVertexArray(VAO[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(secondTriangle), secondTriangle, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
 
 	// Render loop
 	while (!glfwWindowShouldClose(window))
@@ -83,17 +111,28 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		// Draw the content specified in VAO
 		glUseProgram(shaderProgram);
-		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 6); // --> 6 because we're drawning two triangles with 6 vertices
+
+		// Draw the content specified in VAO
+		glBindVertexArray(VAO[0]);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+
+		// Draw the content specified in the second VAO
+		glBindVertexArray(VAO[1]);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		// Swap buffers and poll for IO events
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 
-	terminate(shaderProgram, &VAO, &VBO);
+	// Deleting resources
+	glDeleteProgram(shaderProgram);
+	glDeleteVertexArrays(2, VAO);
+	glDeleteBuffers(2, VBO);
+
+	// Unallocate all hints and clean resources made before
+	glfwTerminate();
 
 	return 0;
 }
