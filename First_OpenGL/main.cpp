@@ -14,8 +14,6 @@ void testShader(GLuint vertexShader);
 
 void testProgram(GLuint program);
 
-void terminate(unsigned int shaderProgram, unsigned int *VAO, unsigned int*VBO);
-
 // Settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -253,16 +251,4 @@ void testProgram(GLuint program)
 		glGetProgramInfoLog(program, 512, NULL, infoLog);
 		std::cout << "ERROR::SHADER::PROGRAM::CREATION_FAILED\n" << infoLog << std::endl;
 	}
-}
-
-// Terminate the program and delete all resources
-void terminate(unsigned int shaderProgram, unsigned int *VAO, unsigned int *VBO)
-{
-	// Deleting resources
-	glDeleteProgram(shaderProgram);
-	glDeleteVertexArrays(1, VAO);
-	glDeleteBuffers(1, VBO);
-
-	// Unallocate all hints and clean resources made before
-	glfwTerminate();
 }
