@@ -3,12 +3,18 @@
 #include <iostream>
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
+
 void processInput(GLFWwindow *window);
-void createVertexObjects(unsigned int* VAO, unsigned int* VBO);
-void testShader(GLuint vertexShader);
-void testProgram(GLuint program);
+
+void createVertexObjects(unsigned int *VAO, unsigned int *VBO);
+
 unsigned int createShaderProgram();
-void terminate(unsigned int shaderProgram);
+
+void testShader(GLuint vertexShader);
+
+void testProgram(GLuint program);
+
+void terminate(unsigned int shaderProgram, unsigned int *VAO, unsigned int*VBO);
 
 // Settings
 const unsigned int SCR_WIDTH = 800;
@@ -49,7 +55,7 @@ int main()
 		return -1;
 	}
 
-	// Make the context/state of the window created before the actual context
+	// Make the context of the window created
 	glfwMakeContextCurrent(window);
 
 	// Set callback function for resize the window
@@ -62,8 +68,8 @@ int main()
 		return -1;
 	}
 
+	// Configure shaders and buffers
 	unsigned int VAO, VBO, shaderProgram;
-
 	shaderProgram = createShaderProgram();
 	createVertexObjects(&VAO, &VBO);
 
@@ -73,21 +79,21 @@ int main()
 		// Process all input
 		processInput(window);
 
-		// Clear actual buffer setting the color from glClearColor
+		// Clear actual buffer setting an RGBA color
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		// Draw the content specified in VAO
 		glUseProgram(shaderProgram);
 		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawArrays(GL_TRIANGLES, 0, 6); // --> 6 because we're drawning two triangles with 6 vertices
 
 		// Swap buffers and poll for IO events
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 
-	terminate(shaderProgram);
+	terminate(shaderProgram, &VAO, &VBO);
 
 	return 0;
 }
@@ -98,7 +104,7 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 	glViewport(0, 0, width, height);
 }
 
-// Process all input
+// Process all input from peripherals
 void processInput(GLFWwindow *window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -107,14 +113,17 @@ void processInput(GLFWwindow *window)
 	}
 }
 
-// Set the vertices for draw a triangle in the GPU memory
+// Configure vertex attributes and set buffers to draw triangles
 void createVertexObjects(unsigned int *VAO, unsigned int *VBO)
 {
 	// Set the postition of the vertices in NDC pattern
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
-		0.0f,  0.5f, 0.0f
+		-1.0f, -0.5f, 0.0f,
+		0.0f, -0.5f, 0.0f,
+		-0.5f,  0.5f, 0.0f,
+		0.0f, -0.5f, 0.0f,
+		1.0f, -0.5f, 0.0f,
+		0.5f,  0.5f, 0.0f
 	};
 
 	// Generate and bind an Vertex Array Object with an ID (VAO)
@@ -140,14 +149,15 @@ void createVertexObjects(unsigned int *VAO, unsigned int *VBO)
 // Create and link a Shader Program
 unsigned int createShaderProgram()
 {
-	// Create a vertex shader and compiles using the vertexShaderSource
-	unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	// Create a vertex shader and compiles using the vertex shader source
+	unsigned int vertexShader;
+	vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
 	glCompileShader(vertexShader);
 
 	testShader(vertexShader);
 
-	// Create the Fragment Shader with an ID
+	// Create a fragment shader and compiles using the fragment shader source
 	unsigned int fragmentShader;
 	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
@@ -197,11 +207,13 @@ void testProgram(GLuint program)
 }
 
 // Terminate the program and delete all resources
-void terminate(unsigned int shaderProgram)
+void terminate(unsigned int shaderProgram, unsigned int *VAO, unsigned int *VBO)
 {
-	// Unallocate all hints and clean resources made before
-	glfwTerminate();
-
 	// Deleting resources
 	glDeleteProgram(shaderProgram);
+	glDeleteVertexArrays(1, VAO);
+	glDeleteBuffers(1, VBO);
+
+	// Unallocate all hints and clean resources made before
+	glfwTerminate();
 }
