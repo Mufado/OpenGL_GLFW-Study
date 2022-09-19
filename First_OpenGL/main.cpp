@@ -3,10 +3,15 @@
 #include <iostream>
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
+
 void processInput(GLFWwindow *window);
+
 void createVertexObjects(unsigned int* VAO, unsigned int* VBO);
+
 void testShader(GLuint vertexShader);
+
 void testProgram(GLuint program);
+
 unsigned int createShaderProgram();
 
 // Settings
@@ -24,10 +29,11 @@ const char *vertexShaderSource =
 
 const char* fragmentShaderSource = 
 	"#version 330 core\n"
+	"uniform vec4 tColor;\n"
 	"out vec4 FragColor;\n"
 	"void main()\n"
 	"{\n"
-	"   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+	"   FragColor = tColor;\n"
 	"}\n\0";
 
 int main()
@@ -66,6 +72,17 @@ int main()
 	shaderProgram = createShaderProgram();
 	createVertexObjects(&VAO, &VBO);
 
+	// Get the uniform location on the created shader program
+	int colorUniform = glGetUniformLocation(shaderProgram, "tColor");
+	
+	float fragGreenColor;
+
+	// Bind the VAO before the render loop because we have only one VAO
+	glBindVertexArray(VAO);
+
+	// Same logic than VAO: we have only one shader program
+	glUseProgram(shaderProgram);
+
 	// Render loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -76,9 +93,11 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		// Define uniform value in unsing shader program
+		fragGreenColor = sin((float)glfwGetTime()) / 2.0f + 0.5f;
+		glUniform4f(colorUniform, 0.0f, fragGreenColor, 0.0f, 0.0f);
+
 		// Draw the content specified in VAO
-		glUseProgram(shaderProgram);
-		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		// Swap buffers and poll for IO events
