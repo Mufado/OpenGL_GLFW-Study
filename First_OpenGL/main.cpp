@@ -22,18 +22,21 @@ const unsigned int SCR_HEIGHT = 600;
 const char *vertexShaderSource =
 	"#version 330 core\n"
 	"layout (location = 0) in vec3 aPos;\n"
+	"layout (location = 1) in vec3 color;\n"
+	"out vec4 VertexColor;\n"
 	"void main()\n"
 	"{\n"
-	"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+	"   gl_Position = vec4(aPos, 1.0);\n"
+	"	VertexColor = vec4(color, 1.0);\n"
 	"}\0";
 
 const char* fragmentShaderSource = 
 	"#version 330 core\n"
-	"uniform vec4 tColor;\n"
+	"in vec4 VertexColor;\n"
 	"out vec4 FragColor;\n"
 	"void main()\n"
 	"{\n"
-	"   FragColor = tColor;\n"
+	"   FragColor = VertexColor;\n"
 	"}\n\0";
 
 int main()
@@ -72,11 +75,6 @@ int main()
 	shaderProgram = createShaderProgram();
 	createVertexObjects(&VAO, &VBO);
 
-	// Get the uniform location on the created shader program
-	int colorUniform = glGetUniformLocation(shaderProgram, "tColor");
-	
-	float fragGreenColor;
-
 	// Bind the VAO before the render loop because we have only one VAO
 	glBindVertexArray(VAO);
 
@@ -92,10 +90,6 @@ int main()
 		// Clear actual buffer setting the color from glClearColor
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
-
-		// Define uniform value in unsing shader program
-		fragGreenColor = sin((float)glfwGetTime()) / 2.0f + 0.5f;
-		glUniform4f(colorUniform, 0.0f, fragGreenColor, 0.0f, 0.0f);
 
 		// Draw the content specified in VAO
 		glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -136,9 +130,10 @@ void createVertexObjects(unsigned int *VAO, unsigned int *VBO)
 {
 	// Set the postition of the vertices in NDC pattern
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
-		0.0f,  0.5f, 0.0f
+		// Postition		// Color
+		-0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,
+		0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,
+		0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f
 	};
 
 	// Generate and bind an Vertex Array Object with an ID (VAO)
@@ -152,9 +147,13 @@ void createVertexObjects(unsigned int *VAO, unsigned int *VBO)
 	glBindBuffer(GL_ARRAY_BUFFER, *VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	// Configure how OpenGL interpret the VAO
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * (sizeof(float)), (void*)0);
+	// Configure the positon attribute of the vertices in VAO
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * (sizeof(float)), (void*)0);
 	glEnableVertexAttribArray(0);
+
+	// Configure the color attribute of the vertices in VAO
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * (sizeof(float)), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 
 	// After configured, VAO and VBO can be unbinded
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
