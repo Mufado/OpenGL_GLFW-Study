@@ -1,43 +1,17 @@
 #include <glad/glad.h>
 #include <glfw3.h>
 #include <iostream>
+#include "Shader.h"
+
+void createVertexObjects(unsigned int* VAO, unsigned int* VBO);
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 
 void processInput(GLFWwindow *window);
 
-void createVertexObjects(unsigned int* VAO, unsigned int* VBO);
-
-void testShader(GLuint vertexShader);
-
-void testProgram(GLuint program);
-
-unsigned int createShaderProgram();
-
 // Settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
-
-// Vertex shader in shading language
-const char *vertexShaderSource =
-	"#version 330 core\n"
-	"layout (location = 0) in vec3 aPos;\n"
-	"layout (location = 1) in vec3 color;\n"
-	"out vec4 VertexColor;\n"
-	"void main()\n"
-	"{\n"
-	"   gl_Position = vec4(aPos, 1.0);\n"
-	"	VertexColor = vec4(color, 1.0);\n"
-	"}\0";
-
-const char* fragmentShaderSource = 
-	"#version 330 core\n"
-	"in vec4 VertexColor;\n"
-	"out vec4 FragColor;\n"
-	"void main()\n"
-	"{\n"
-	"   FragColor = VertexColor;\n"
-	"}\n\0";
 
 int main()
 {
@@ -70,16 +44,17 @@ int main()
 		return -1;
 	}
 
-	unsigned int VAO, VBO, shaderProgram;
+	unsigned int VAO, VBO;
 
-	shaderProgram = createShaderProgram();
+	Shader shader("C:/Users/gusta/source/repos/First_OpenGL/First_OpenGL/shader_vs", "C:/Users/gusta/source/repos/First_OpenGL/First_OpenGL/shader_fs");
+
 	createVertexObjects(&VAO, &VBO);
 
 	// Bind the VAO before the render loop because we have only one VAO
 	glBindVertexArray(VAO);
 
 	// Same logic than VAO: we have only one shader program
-	glUseProgram(shaderProgram);
+	shader.use();
 
 	// Render loop
 	while (!glfwWindowShouldClose(window))
@@ -100,7 +75,6 @@ int main()
 	}
 
 	// Deleting resources
-	glDeleteProgram(shaderProgram);
 	glDeleteBuffers(1, &VBO);
 	glDeleteVertexArrays(1, &VAO);
 
@@ -158,63 +132,4 @@ void createVertexObjects(unsigned int *VAO, unsigned int *VBO)
 	// After configured, VAO and VBO can be unbinded
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
-}
-
-// Create and link a Shader Program
-unsigned int createShaderProgram()
-{
-	// Create a vertex shader and compiles using the vertexShaderSource
-	unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-	glCompileShader(vertexShader);
-
-	testShader(vertexShader);
-
-	// Create the Fragment Shader with an ID
-	unsigned int fragmentShader;
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-	glCompileShader(fragmentShader);
-
-	testShader(fragmentShader);
-
-	// Create and link the Shader Program with both compiled shaders
-	unsigned int shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-
-	// Delete shader allocation
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
-
-	return shaderProgram;
-}
-
-// Test if shader compilation worked
-void testShader(GLuint shader)
-{
-	int  success;
-	char infoLog[512];
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-
-	if (!success)
-	{
-		glGetShaderInfoLog(shader, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-	}
-}
-
-// Test if program creation worked
-void testProgram(GLuint program)
-{
-	int  success;
-	char infoLog[512];
-	glGetProgramiv(program, GL_COMPILE_STATUS, &success);
-
-	if (!success)
-	{
-		glGetProgramInfoLog(program, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::PROGRAM::CREATION_FAILED\n" << infoLog << std::endl;
-	}
 }
